@@ -1,0 +1,60 @@
+Kafka setup with AWS EC2 instance (Specific for Mac)
+
+In the terminal -
+Go to the directory where key pair is downloaded
+chmod 400 kafka-bank-data-project1.pem
+
+Login to the ec2 instance using SSH client
+ssh -i "[key-pair name]" [ec2 instance]
+
+wget https://downloads.apache.org/kafka/3.3.2/kafka_2.12-3.3.2.tgz
+tar -xvf kafka_2.12-3.3.2.tgz
+
+Install java -
+sudo yum install java-1.8*
+Check version: java -version
+
+cd kafka_2.12-3.3.2
+
+Start Zoo-keeper:
+-------------------------------
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+Open another window to start kafka
+But first ssh to to your ec2 machine as done above
+
+Start Kafka-server:
+----------------------------------------
+Duplicate the session & enter in a new console --
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M" (Increase memory in Kafka server)
+cd kafka_2.12-3.3.2
+bin/kafka-server-start.sh config/server.properties
+
+Now stop both servers as they are pointing to private servers
+
+Run this command to open server properties
+sudo nano config/server.properties
+Find the line:
+#advertised.listeners=PLAINTEXT://your.host.name:9092
+Replace your.host.name with the public IP address in AWS EC2 instance and save the server properties file
+
+Run the zookeeper command in one terminal - bin/zookeeper-server-start.sh config/zookeeper.properties
+Start EC2 instance in another terminal - bin/kafka-server-start.sh config/server.properties
+
+In AWS EC2 console - Add a new inbound rule under Security group with Allow My IP rules
+
+Create topic:
+-----------------------------
+Duplicate the session & enter in a new console --
+cd kafka_2.12-3.3.1
+	⁃	bin/kafka-topics.sh --create --topic [topicname] --bootstrap-server [IP address]:9092 --replication-factor 1 --partitions 1
+
+Start Producer:
+--------------------------
+bin/kafka-console-producer.sh --topic [topicname] --bootstrap-server [IP address]:9092 
+
+Start Consumer:
+-------------------------
+Duplicate the session & enter in a new console --
+cd kafka_2.12-3.3.1
+bin/kafka-console-consumer.sh --topic [topicname] --bootstrap-server [IP address]:9092
